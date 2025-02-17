@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (c *JitoJsonRpcClient) SendTxn(params interface{}, bundleOnly bool) (json.RawMessage, error) {
+func (c *JitoJsonRpcClient) SendTxn(params interface{}, bundleOnly bool) (json.RawMessage, string, error) {
 	endpoint := "/transactions"
 	queryParams := []string{}
 
@@ -21,5 +21,9 @@ func (c *JitoJsonRpcClient) SendTxn(params interface{}, bundleOnly bool) (json.R
 		endpoint = fmt.Sprintf("%s?%s", endpoint, strings.Join(queryParams, "&"))
 	}
 
-	return c.sendRequest(endpoint, "sendTransaction", params)
+	request, err := c.sendRequest(endpoint, "sendTransaction", params)
+	if err != nil {
+		return nil, "", err
+	}
+	return request.Resp, request.BundleID, err
 }

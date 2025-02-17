@@ -30,7 +30,11 @@ func (c *JitoJsonRpcClient) GetTipAccounts() (json.RawMessage, error) {
 	if c.UUID != "" {
 		endpoint = fmt.Sprintf("%s?uuid=%s", endpoint, c.UUID)
 	}
-	return c.sendRequest(endpoint, "getTipAccounts", nil)
+	request, err := c.sendRequest(endpoint, "getTipAccounts", nil)
+	if err != nil {
+		return nil, err
+	}
+	return request.Resp, err
 }
 
 func (c *JitoJsonRpcClient) GetRandomTipAccount() (*TipAccount, error) {
@@ -65,7 +69,7 @@ func (c *JitoJsonRpcClient) GetBundleStatuses(bundleIds []string) (*BundleStatus
 	}
 
 	var response BundleStatusResponse
-	if err := json.Unmarshal(responseBody, &response); err != nil {
+	if err := json.Unmarshal(responseBody.Resp, &response); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal bundle statuses: %w", err)
 	}
 
@@ -77,7 +81,11 @@ func (c *JitoJsonRpcClient) SendBundle(params interface{}) (json.RawMessage, err
 	if c.UUID != "" {
 		endpoint = fmt.Sprintf("%s?uuid=%s", endpoint, c.UUID)
 	}
-	return c.sendRequest(endpoint, "sendBundle", params)
+	request, err := c.sendRequest(endpoint, "sendBundle", params)
+	if err != nil {
+		return nil, err
+	}
+	return request.Resp, nil
 }
 
 func (c *JitoJsonRpcClient) GetInflightBundleStatuses(params interface{}) (json.RawMessage, error) {
@@ -85,5 +93,9 @@ func (c *JitoJsonRpcClient) GetInflightBundleStatuses(params interface{}) (json.
 	if c.UUID != "" {
 		endpoint = fmt.Sprintf("%s?uuid=%s", endpoint, c.UUID)
 	}
-	return c.sendRequest(endpoint, "getInflightBundleStatuses", params)
+	request, err := c.sendRequest(endpoint, "getInflightBundleStatuses", params)
+	if err != nil {
+		return nil, err
+	}
+	return request.Resp, err
 }

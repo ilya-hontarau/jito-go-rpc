@@ -13,8 +13,9 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/rpc"
-	jitorpc "github.com/jito-labs/jito-go-rpc"
 	"github.com/mr-tron/base58"
+
+	jitorpc "github.com/jito-labs/jito-go-rpc"
 )
 
 func main() {
@@ -134,7 +135,7 @@ func main() {
 		fmt.Printf("Bundle sent successfully. Bundle ID: %s\n", txSignature)
 		checkBundleStatus(jitoClient, txSignature)
 	} else {
-		result, err := jitoClient.SendTxn(txnRequest, false)
+		result, _, err := jitoClient.SendTxn(txnRequest, false)
 		if err != nil {
 			log.Fatalf("Failed to send transaction: %v", err)
 		}

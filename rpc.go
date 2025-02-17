@@ -7,7 +7,12 @@ import (
 	"net/http"
 )
 
-func (c *JitoJsonRpcClient) sendRequest(endpoint, method string, params interface{}) (json.RawMessage, error) {
+type sendRequestResponse struct {
+	Resp     json.RawMessage `json:"response"`
+	BundleID string
+}
+
+func (c *JitoJsonRpcClient) sendRequest(endpoint, method string, params interface{}) (sendRequestResponse, error) {
 	url := fmt.Sprintf("%s%s", c.BaseURL, endpoint)
 
 	request := JsonRpcRequest{
@@ -19,7 +24,7 @@ func (c *JitoJsonRpcClient) sendRequest(endpoint, method string, params interfac
 
 	requestBody, err := json.Marshal(request)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request: %w", err)
+		return sendRequestResponse{}, fmt.Errorf("error marshaling request: %w", err)
 	}
 
 	if c.isDebugEnabled() {
@@ -29,7 +34,7 @@ func (c *JitoJsonRpcClient) sendRequest(endpoint, method string, params interfac
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
+		return sendRequestResponse{}, fmt.Errorf("error creating request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -39,7 +44,7 @@ func (c *JitoJsonRpcClient) sendRequest(endpoint, method string, params interfac
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
+		return sendRequestResponse{}, fmt.Errorf("error sending request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -50,16 +55,18 @@ func (c *JitoJsonRpcClient) sendRequest(endpoint, method string, params interfac
 	var jsonResp JsonRpcResponse
 	err = json.NewDecoder(resp.Body).Decode(&jsonResp)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding response: %w", err)
+		return sendRequestResponse{}, fmt.Errorf("error decoding response: %w", err)
 	}
 
 	if jsonResp.Error != nil {
-		return nil, fmt.Errorf("RPC error: %s", jsonResp.Error.Message)
+		return sendRequestResponse{}, fmt.Errorf("RPC error: %s", jsonResp.Error.Message)
 	}
 
 	if c.isDebugEnabled() {
 		fmt.Printf("Response body: %s\n", string(jsonResp.Result))
 	}
-
-	return jsonResp.Result, nil
+	return sendRequestResponse{
+		Resp:     jsonResp.Result,
+		BundleID: resp.Header.Get("x-bundle-id"),
+	}, nil
 }
