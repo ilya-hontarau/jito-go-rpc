@@ -88,14 +88,33 @@ func (c *JitoJsonRpcClient) SendBundle(params interface{}) (json.RawMessage, err
 	return request.Resp, nil
 }
 
-func (c *JitoJsonRpcClient) GetInflightBundleStatuses(params interface{}) (json.RawMessage, error) {
+type InflightBundleStatuses struct {
+	Context InflightBundleStatusContext `json:"context"`
+	Value   []InflightBundleStatusValue `json:"value"`
+}
+
+type InflightBundleStatusContext struct {
+	Slot int `json:"slot"`
+}
+
+type InflightBundleStatusValue struct {
+	BundleIdD string `json:"bundle_id"`
+	Status    string `json:"status"`
+}
+
+func (c *JitoJsonRpcClient) GetInflightBundleStatuses(params [][]string) (InflightBundleStatuses, error) {
 	endpoint := "/bundles"
 	if c.UUID != "" {
 		endpoint = fmt.Sprintf("%s?uuid=%s", endpoint, c.UUID)
 	}
 	request, err := c.sendRequest(endpoint, "getInflightBundleStatuses", params)
 	if err != nil {
-		return nil, err
+		return InflightBundleStatuses{}, err
 	}
-	return request.Resp, err
+	var statues InflightBundleStatuses
+	err = json.Unmarshal(request.Resp, &statues)
+	if err != nil {
+		return InflightBundleStatuses{}, fmt.Errorf("failed to unmarshal inflight bundle statuses: %w", err)
+	}
+	return statues, nil
 }
