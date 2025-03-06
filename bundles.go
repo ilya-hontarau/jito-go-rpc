@@ -102,12 +102,12 @@ type InflightBundleStatusValue struct {
 	Status    string `json:"status"`
 }
 
-func (c *JitoJsonRpcClient) GetInflightBundleStatuses(params [][]string) (InflightBundleStatuses, error) {
+func (c *JitoJsonRpcClient) GetInflightBundleStatuses(params []string) (InflightBundleStatuses, error) {
 	endpoint := "/bundles"
 	if c.UUID != "" {
 		endpoint = fmt.Sprintf("%s?uuid=%s", endpoint, c.UUID)
 	}
-	request, err := c.sendRequest(endpoint, "getInflightBundleStatuses", params)
+	request, err := c.sendRequest(endpoint, "getInflightBundleStatuses", [][]string{params})
 	if err != nil {
 		return InflightBundleStatuses{}, err
 	}
