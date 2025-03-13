@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -52,10 +53,14 @@ func (c *JitoJsonRpcClient) sendRequest(endpoint, method string, params interfac
 		fmt.Printf("Response status: %s\n", resp.Status)
 	}
 
-	var jsonResp JsonRpcResponse
-	err = json.NewDecoder(resp.Body).Decode(&jsonResp)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return sendRequestResponse{}, fmt.Errorf("error decoding response: %w", err)
+		return sendRequestResponse{}, fmt.Errorf("error reading response body: %w", err)
+	}
+	var jsonResp JsonRpcResponse
+	err = json.Unmarshal(respBody, &jsonResp)
+	if err != nil {
+		return sendRequestResponse{}, fmt.Errorf("error decoding response: %w %s", err, respBody)
 	}
 
 	if jsonResp.Error != nil {
